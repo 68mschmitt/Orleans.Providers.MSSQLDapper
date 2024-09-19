@@ -154,7 +154,7 @@ namespace Orleans.Persistence.MSSQLDapper
         public async Task WriteStateAsync<T>(string stateName, GrainId grainId, IGrainState<T> grainState)
         {
             var grainStateVersion = ToGrainStateVersion(grainState);
-            var payloadBinary = grainStorageSerializer.Serialize( grainState.State );
+            var payloadBinary = grainStorageSerializer.Serialize( grainState.State ).ToArray();
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace((int)ErrorCode.StorageProviderBase, $"Writing grain state: name={this.name} stateName={stateName} grainId={grainId} ETag={grainState.ETag}");
