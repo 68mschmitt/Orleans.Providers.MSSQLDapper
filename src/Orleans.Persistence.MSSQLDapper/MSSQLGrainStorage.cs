@@ -22,20 +22,20 @@ namespace Orleans.Persistence.MSSQLDapper
         private readonly string name;
         private readonly ILogger<MSSQLGrainStorage> logger;
         private readonly MSSQLStorageOptions options;
-        private readonly Serializer serializationManager;
+        private readonly IGrainStorageSerializer grainStorageSerializer;
         private readonly IServiceProvider serviceProvider;
 
         public MSSQLGrainStorage(
             string name,
             MSSQLStorageOptions options,
-            Serializer serializationManager,
+            IGrainStorageSerializer grainStorageSerializer,
             IServiceProvider serviceProvider,
             ILogger<MSSQLGrainStorage> logger)
         {
             this.name = name;
             this.logger = logger;
             this.options = options;
-            this.serializationManager = serializationManager;
+            this.grainStorageSerializer = grainStorageSerializer;
             this.serviceProvider = serviceProvider;
         }
 
@@ -132,7 +132,7 @@ namespace Orleans.Persistence.MSSQLDapper
                 }
                 else
                 {
-                    state = serializationManager.Deserialize<T>(persistedGrainState.PayloadBinary);
+                    state = grainStorageSerializer.Deserialize<T>(persistedGrainState.PayloadBinary);
                 }
 
                 grainState.State = state;
@@ -154,7 +154,7 @@ namespace Orleans.Persistence.MSSQLDapper
         public async Task WriteStateAsync<T>(string stateName, GrainId grainId, IGrainState<T> grainState)
         {
             var grainStateVersion = ToGrainStateVersion(grainState);
-            var payloadBinary = this.serializationManager.SerializeToArray(grainState.State);
+            var payloadBinary = grainStorageSerializer.Serialize( grainState.State );
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace((int)ErrorCode.StorageProviderBase, $"Writing grain state: name={this.name} stateName={stateName} grainId={grainId} ETag={grainState.ETag}");
